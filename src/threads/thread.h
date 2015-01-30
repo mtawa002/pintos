@@ -4,6 +4,7 @@
 #include <debug.h>
 #include <list.h>
 #include <stdint.h>
+#include <stdbool.h> //added in order to use BOOL types
 
 /* States in a thread's life cycle. */
 enum thread_status
@@ -100,6 +101,16 @@ struct thread
 
     /* Owned by thread.c. */
     unsigned magic;                     /* Detects stack overflow. */
+
+	 /* added variable to thread struct */
+	  int64_t resume_ticks;
+	  int nice;
+	  int recent_cpu;
+
+	  int init_priority;
+	  struct lock *wait_on_lock;
+	  struct list donations;
+	  struct list_elem donation_elem;
   };
 
 /* If false (default), use round-robin scheduler.
@@ -137,5 +148,23 @@ int thread_get_nice (void);
 void thread_set_nice (int);
 int thread_get_recent_cpu (void);
 int thread_get_load_avg (void);
+
+/*Added functions*/
+void thread_sleep(int64_t ticks);
+bool compare(const struct list_elem *l1, 
+					 const struct list_elem *l2,
+					 void *aux UNUSED);
+bool compare_priority(const struct list_elem *l1,
+					 const struct list_elem *l2,
+					 void *aux);
+void is_max_priority(void);
+void mlfqs_priority(struct thread *t);
+void mlfqs_recent_cpu(struct thread *t);
+void mlfqs_load_avg(void);
+void mlfqs_increment(void);
+void mlfqs_recalc(void);
+void donate_priority(void);
+void remote_with_lock(struct lock *lock);
+void refresh_priority(void);
 
 #endif /* threads/thread.h */
