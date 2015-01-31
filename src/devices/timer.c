@@ -180,18 +180,6 @@ timer_interrupt (struct intr_frame *args UNUSED)
 {
   ticks++;
   thread_tick ();
-/*
-  struct list_elem *element = list_begin(&sleep_list);
-  while(element != list_end(&sleep_list)){
-    struct thread *temp = list_entry(element, struct thread, elem);
-	 if(ticks >=  temp->resume_ticks) {
-			list_remove(element);
-			// Add to ready list
-			thread_unblock(temp);
-			element = list_begin(&sleep_list);
-	 }
-  }
-  is_max_priority();*/
 }
 
 /* Returns true if LOOPS iterations waits for more than one timer

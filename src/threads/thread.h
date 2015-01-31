@@ -98,20 +98,19 @@ struct thread
     /* Owned by userprog/process.c. */
     uint32_t *pagedir;                  /* Page directory. */
 #endif
-
-    /* Owned by thread.c. */
-    unsigned magic;                     /* Detects stack overflow. */
-
+	 
 	 /* added variable to thread struct */
 	  int64_t resume_ticks;
 	  int nice;
 	  int recent_cpu;
-
-	  int init_priority;
 	  struct lock *wait_on_lock;
+	  int old_priority;
 	  struct list donations;
 	  struct list_elem donation_elem;
-  };
+  
+     /* Owned by thread.c. */
+     unsigned magic;                     /* Detects stack overflow. */
+ };
 
 /* If false (default), use round-robin scheduler.
    If true, use multi-level feedback queue scheduler.

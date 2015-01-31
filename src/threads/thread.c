@@ -140,6 +140,7 @@ static bool thread_sleep_compare(const struct list_elem *a, const struct list_el
 		  const struct thread *thread_b = list_entry(b, struct thread, elem);
 		  return thread_a->resume_ticks < thread_b->resume_ticks;
 }
+/*
 static void check_sleep_list(void)
 {
 		  if (list_empty(&sleep_list)) return;
@@ -161,6 +162,7 @@ static void check_sleep_list(void)
 					 }
 		  }
 }
+*/
 
 /* Called by the timer interrupt handler at each timer tick.
    Thus, this function runs in an external interrupt context. */
@@ -185,7 +187,7 @@ thread_tick (void)
 			  if (timer_ticks() >= thread->resume_ticks) {
 						 struct list_elem *elem_temp = list_next(elem);
 						 list_remove(elem);
-						 list_push_back(&ready_list, elem);
+						 list_insert_ordered(&ready_list, elem, (list_less_func *) &compare, NULL);
 						 elem = elem_temp;
 						 thread->resume_ticks = 0;
 						 thread->status = THREAD_READY;
@@ -305,7 +307,7 @@ thread_unblock (struct thread *t)
 
   old_level = intr_disable ();
   ASSERT (t->status == THREAD_BLOCKED);
-  list_push_back(&ready_list, &t->elem);
+  list_insert_ordered(&ready_list, &t->elem, (list_less_func *) &compare, NULL);
   t->status = THREAD_READY;
   intr_set_level (old_level);
 }
@@ -376,7 +378,7 @@ thread_yield (void)
 
   old_level = intr_disable ();
   if (cur != idle_thread) 
-    list_push_back (&ready_list, &cur->elem);
+    list_insert_ordered (&ready_list, &cur->elem, (list_less_func *) &compare, NULL);
   cur->status = THREAD_READY;
   schedule ();
   intr_set_level (old_level);
@@ -420,6 +422,7 @@ void
 thread_set_priority (int new_priority) 
 {
   thread_current ()->priority = new_priority;
+  //thread_yield();
 }
 
 /* Returns the current thread's priority. */
@@ -662,6 +665,9 @@ allocate_tid (void)
    Used by switch.S, which can't figure it out on its own. */
 uint32_t thread_stack_ofs = offsetof (struct thread, stack);
 
+/*this helps put threads in a container by sorting them
+ * based on their priority
+ * */
 bool compare(const struct list_elem *l1,
 					 const struct list_elem *l2,
 					 void *aux UNUSED){
@@ -769,7 +775,7 @@ void remove_with_lock(struct lock *lock){
 
 void refresh_priority(void){
 	struct thread *t = thread_current();
-	t->priority = t->init_priority;
+	t->priority = t->old_priority;
 	if(list_empty(&t->donations))return;
 	struct thread *temp = list_entry(list_front(&t->donations),
 						 struct thread, donation_elem);
