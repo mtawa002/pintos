@@ -86,6 +86,11 @@ static void schedule (void);
 void thread_schedule_tail (struct thread *prev);
 static tid_t allocate_tid (void);
 
+/*these following handle donate passively*/
+
+bool donate_check(void);
+void donate_do(void);
+
 /* Initializes the threading system by transforming the code
    that's currently running into a thread.  This can't work in
    general and it is possible in this case only because loader.S
@@ -421,37 +426,63 @@ thread_foreach (thread_action_func *func, void *aux)
 void
 thread_set_priority (int new_priority) 
 {
+
+ // int old_priority = thread_current()->priority;
   thread_current ()->priority = new_priority;
-  //thread_yield();
+  thread_yield();
+/* 
+  if(thread_mlfqs) return;
+ 
+  enum intr_level old_level = intr_disable();
+ 
+  thread_current()->init_priority = new_priority;
+
+  if(old_priority < thread_current()->priority) 
+			 donate_priority();
+ 
+  else is_max_priority();
+ 
+  intr_set_level(old_level);
+*/
 }
 
 /* Returns the current thread's priority. */
 int
 thread_get_priority (void) 
 {
-  return thread_current ()->priority;
+  enum intr_level old_level = intr_disable();
+  int temp = thread_current()->priority;
+  intr_set_level(old_level);
+  return temp;
 }
 
 /* Sets the current thread's nice value to NICE. */
 void
 thread_set_nice (int nice UNUSED) 
 {
-  /* Not yet implemented. */
+  enum intr_level old_level = intr_disable();
+  thread_current()->nice = nice;
+  mlfqs_priority(thread_current());
+  is_max_priority();
+  intr_set_level(old_level);
 }
 
 /* Returns the current thread's nice value. */
 int
 thread_get_nice (void) 
 {
-  /* Not yet implemented. */
-  return 0;
+  enum intr_level old_level = intr_disable();
+  int temp = thread_current()->nice;
+  intr_set_level(old_level);
+
+  return temp;
 }
 
 /* Returns 100 times the system load average. */
 int
 thread_get_load_avg (void) 
 {
-  /* Not yet implemented. */
+  
   return 0;
 }
 
@@ -549,6 +580,11 @@ init_thread (struct thread *t, const char *name, int priority)
   t->priority = priority;
   t->magic = THREAD_MAGIC;
   list_push_back (&all_list, &t->allelem);
+
+  /*code for priority donation */
+  t->init_priority = priority;
+  t->wait_on_lock = NULL;
+  list_init(&t->donations);
 }
 
 /* Allocates a SIZE-byte frame at the top of thread T's stack and
@@ -775,7 +811,7 @@ void remove_with_lock(struct lock *lock){
 
 void refresh_priority(void){
 	struct thread *t = thread_current();
-	t->priority = t->old_priority;
+	t->priority = t->init_priority;
 	if(list_empty(&t->donations))return;
 	struct thread *temp = list_entry(list_front(&t->donations),
 						 struct thread, donation_elem);

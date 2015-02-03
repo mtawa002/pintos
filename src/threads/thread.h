@@ -104,7 +104,7 @@ struct thread
 	  int nice;
 	  int recent_cpu;
 	  struct lock *wait_on_lock;
-	  int old_priority;
+	  int init_priority;
 	  struct list donations;
 	  struct list_elem donation_elem;
   
@@ -163,7 +163,7 @@ void mlfqs_load_avg(void);
 void mlfqs_increment(void);
 void mlfqs_recalc(void);
 void donate_priority(void);
-void remote_with_lock(struct lock *lock);
+void remove_with_lock(struct lock *lock);
 void refresh_priority(void);
 
 #endif /* threads/thread.h */
