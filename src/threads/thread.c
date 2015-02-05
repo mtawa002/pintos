@@ -427,14 +427,14 @@ void
 thread_set_priority (int new_priority) 
 {
 
- // int old_priority = thread_current()->priority;
   thread_current ()->priority = new_priority;
-  thread_yield();
-/* 
+//  thread_yield();
+ 
   if(thread_mlfqs) return;
  
   enum intr_level old_level = intr_disable();
  
+  int old_priority = thread_current()->init_priority;
   thread_current()->init_priority = new_priority;
 
   if(old_priority < thread_current()->priority) 
@@ -443,7 +443,6 @@ thread_set_priority (int new_priority)
   else is_max_priority();
  
   intr_set_level(old_level);
-*/
 }
 
 /* Returns the current thread's priority. */
