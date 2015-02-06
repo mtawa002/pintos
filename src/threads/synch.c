@@ -164,7 +164,7 @@ sema_test_helper (void *sema_)
       sema_up (&sema[1]);
     }
 }
-
+
 /* Initializes LOCK.  A lock can be held by at most a single
    thread at any given time.  Our locks are not "recursive", that
    is, it is an error for the thread currently holding a lock to
@@ -180,6 +180,7 @@ sema_test_helper (void *sema_)
    acquire and release it.  When these restrictions prove
    onerous, it's a good sign that a semaphore should be used,
    instead of a lock. */
+
 void
 lock_init (struct lock *lock)
 {
@@ -213,7 +214,7 @@ lock_acquire (struct lock *lock)
 	}
   sema_down (&lock->semaphore);
   thread_current()->wait_on_lock = NULL;
-  lock->holder = thread_current ();
+  lock->holder = thread_current();
   intr_set_level(old_level);
 }
 
@@ -223,6 +224,7 @@ lock_acquire (struct lock *lock)
 
    This function will not sleep, so it may be called within an
    interrupt handler. */
+
 bool
 lock_try_acquire (struct lock *lock)
 {
@@ -359,7 +361,6 @@ cond_signal (struct condition *cond, struct lock *lock UNUSED)
 /* Wakes up all threads, if any, waiting on COND (protected by
    LOCK).  LOCK must be held before calling this function.
 
-   An interrupt handler cannot acquire a lock, so it does not
    make sense to try to signal a condition variable within an
    interrupt handler. */
 void

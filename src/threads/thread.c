@@ -6,7 +6,6 @@
 #include <string.h>
 #include "threads/flags.h"
 #include "threads/interrupt.h"
-#include "threads/fixed_point.h"
 #include "threads/intr-stubs.h"
 #include "threads/palloc.h"
 #include "threads/switch.h"
@@ -461,7 +460,6 @@ thread_set_nice (int nice UNUSED)
 {
   enum intr_level old_level = intr_disable();
   thread_current()->nice = nice;
-  mlfqs_priority(thread_current());
   is_max_priority();
   intr_set_level(old_level);
 }
@@ -726,61 +724,10 @@ void is_max_priority(void){
 	 }
 	 return;
   }
-  
+  enum intr_level old_level = intr_disable();
   if(thread_current()->priority < t->priority)
 			 thread_yield();
-}
-
-void mlfqs_priority(struct thread *t){
-  if(t == idle_thread) return;
-
-  int term1 = int_to_fp(PRI_MAX);
-  int term2 = div_mixed(t->recent_cpu, 4);
-  int term3 = 2*t->nice;
-  term1 = sub_fp(term1, term2);
-  term1 = sub_mixed(term1, term3);
-  t->priority = fp_to_int(term1);
-
-  if(t->priority < PRI_MIN)
-			 t->priority = PRI_MIN;
-  if(t->priority > PRI_MAX)
-			 t->priority = PRI_MAX;
-}
-
-void mlfqs_recent_cpu(struct thread *t){
-  if(t == idle_thread) return;
-
-  int term1 = mult_mixed(load_avg, 2);
-  term1 = div_fp(term1, add_mixed(term1, 1));
-  term1 = mult_fp(term1, t->recent_cpu);
-  t->recent_cpu = add_mixed(term1, t->nice);
- }
-
-void mlfqs_load_avg(void){
-  int term2 = list_size(&ready_list);
-  if(thread_current() != idle_thread) term2++;
-
-  int term1 = div_mixed(int_to_fp(59), 60);
-  term1 = mult_fp(term1, load_avg);
-  term2 = div_mixed(int_to_fp(term2), 60);
-  load_avg = add_fp(term1, term2);
-  ASSERT(load_avg >= 0);
-}
-
-void mlfqs_increment(void){
-	if(thread_current() == idle_thread) return;
-	thread_current()->recent_cpu = add_mixed(
-						 thread_current()->recent_cpu, 1);
-}
-
-void mlfqs_recalc(void){
-	struct list_elem *e;
-	for(e = list_begin(&all_list); e != list_end(&all_list);
-						 e = list_next(e)){
-		struct thread *t = list_entry(e, struct thread, allelem);
-		mlfqs_recent_cpu(t);
-		mlfqs_priority(t);
-	}
+  intr_set_level(old_level);
 }
 
 void donate_priority(void){
@@ -816,10 +763,3 @@ void refresh_priority(void){
 						 struct thread, donation_elem);
 	if(temp->priority > t->priority) t->priority = temp->priority;
 }
-
-
-
-
-
-
-

@@ -153,15 +153,8 @@ void thread_sleep(int64_t ticks);
 bool compare(const struct list_elem *l1, 
 					 const struct list_elem *l2,
 					 void *aux UNUSED);
-bool compare_priority(const struct list_elem *l1,
-					 const struct list_elem *l2,
-					 void *aux);
+bool compare_ticks(const struct list_elem *l1, const struct list_elem *l2, void *aux UNUSED); 
 void is_max_priority(void);
-void mlfqs_priority(struct thread *t);
-void mlfqs_recent_cpu(struct thread *t);
-void mlfqs_load_avg(void);
-void mlfqs_increment(void);
-void mlfqs_recalc(void);
 void donate_priority(void);
 void remove_with_lock(struct lock *lock);
 void refresh_priority(void);
