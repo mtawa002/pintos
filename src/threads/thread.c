@@ -274,7 +274,9 @@ thread_create (const char *name, int priority,
 
   /* Add to run queue. */
   thread_unblock (t);
-  
+ 
+  /*yield the current thread if its priority is lower
+	* than the newly created thread */ 
   if(priority > thread_current()->priority) thread_yield();
   return tid;
 }
@@ -439,7 +441,8 @@ thread_set_priority (int new_priority)
   if(old_priority < thread_current()->priority) 
 			 donate_priority();
  
-  else is_max_priority();
+  if(old_priority > thread_current()->priority)
+			 is_max_priority();
  
   intr_set_level(old_level);
 }
@@ -724,10 +727,8 @@ void is_max_priority(void){
 	 }
 	 return;
   }
-  enum intr_level old_level = intr_disable();
   if(thread_current()->priority < t->priority)
 			 thread_yield();
-  intr_set_level(old_level);
 }
 
 void donate_priority(void){
@@ -762,4 +763,14 @@ void refresh_priority(void){
 	struct thread *temp = list_entry(list_front(&t->donations),
 						 struct thread, donation_elem);
 	if(temp->priority > t->priority) t->priority = temp->priority;
+}
+
+bool thread_alive(int pid) {
+  struct list_elem *e;
+  for(e = list_begin(&all_list); e != list_end(&all_list);
+						e = list_next(e)){
+	 if(list_entry(e, struct thread, allelem)->tid == pid)
+		return true;
+  }
+  return false;
 }

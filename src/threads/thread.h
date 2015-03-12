@@ -110,6 +110,16 @@ struct thread
   
      /* Owned by thread.c. */
      unsigned magic;                     /* Detects stack overflow. */
+
+	  //needed for file system call
+	  struct list file_list;
+	  int fd;
+
+	  //needed for wait / exec syscalls
+	  struct list child_list;
+	  tid_t parent;
+
+	  struct child_process* cp;
  };
 
 /* If false (default), use round-robin scheduler.
@@ -159,4 +169,5 @@ void donate_priority(void);
 void remove_with_lock(struct lock *lock);
 void refresh_priority(void);
 
+bool thread_alive(int pid);
 #endif /* threads/thread.h */
